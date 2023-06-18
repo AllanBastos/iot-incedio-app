@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Button  } from 'react-native';
+import { View, Text, StyleSheet, Button } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Paho from 'paho-mqtt';
 import { Icon } from 'react-native-elements';
 import { Audio } from 'expo-av';
 
+background = '#fff';
+
 const FIRE_TOPIC = 'casa/incendio';
+const DHT_TOPIC = 'casa/sensores';
+fire = false;
 
 const mqttConfig = {
   broker: 'mqtt.eclipseprojects.io',
   port: 80,
-  clientId: 'clientId',
+  clientId: 'clientId1234',
   username: '',
   password: '',
 };
@@ -33,13 +37,19 @@ const App = () => {
   const responseListener = useRef();  
   const [isFire, setIsFire] = useState(false);
   const [soundObject, setSoundObject] = useState('');
-
+  const [temperatura, setTemperatura] = useState(0);
+  const [umidade, setUmidade] = useState(0);
+    
   const playSound = async () => {
     try {
       await Audio.setAudioModeAsync({staysActiveInBackground: true});
       const soundObject = new Audio.Sound();
       await soundObject.loadAsync(require('./assets/emergency_alert.mp3'));
       await soundObject.setVolumeAsync(1.0);
+      await soundObject.setIsLoopingAsync(true);
+      if (soundObject !== '') {
+        await soundObject.stopAsync();
+      }
       await soundObject.playAsync();
       setSoundObject(soundObject);
       // Você pode adicionar outras ações após a reprodução do som, se necessário.
@@ -49,15 +59,19 @@ const App = () => {
   };
 
   const stopSound = async () => {
-    if (soundObject) {
+    if (soundObject !== '') {
       await soundObject.stopAsync();
+      setSoundObject('');
     }
   };
 
   const resetApp = () => {
     setIsFire(false);
+    this.fire = false;
     stopSound();
   };
+
+  const muteSound = stopSound;
 
   useEffect(() => {
     console.log("configurando notificações");
@@ -69,19 +83,20 @@ const App = () => {
       console.log(response);
     });
 
-
-
     console.log("Iniciando conexão com o broker MQTT");
     mqttClient.connect({
       userName: mqttConfig.username,
       password: mqttConfig.password,
       useSSL: false,
+      reconnect: true,
       onSuccess: () => {
         console.log('Conexão MQTT estabelecida');
         mqttClient.subscribe(FIRE_TOPIC);
+        mqttClient.subscribe(DHT_TOPIC);
       },
       onFailure: (error) => {
         console.log('Erro na conexão MQTT:', error.errorMessage);
+        console.log(error);
       },
     });
 
@@ -98,8 +113,10 @@ const App = () => {
 
     mqttClient.onConnectionLost = (error) => {
       console.log('Conexão MQTT perdida:', error.errorMessage);
+      console.log(error);
     };
 
+    // 
     return () => {
       mqttClient.disconnect();
       Notifications.removeNotificationSubscription(notificationListener.current);
@@ -115,7 +132,12 @@ const App = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={isFire? styles.containerFogo : styles.container}>
+      <View style={styles.containerTemp}>
+        <Text style={styles.title_medidas}>Temperatura: {temperatura} °C {temperatura > 24 ? '🥵' : '🥶'}</Text>
+        <Text style={styles.title_medidas}>Umidade: {umidade} 💧</Text>
+      </View>
+
       <Text style={styles.title}>Status da Casa</Text>
       <View style={styles.statusContainer}>
         <Icon
@@ -126,10 +148,13 @@ const App = () => {
         />
         <Text style={styles.statusText}>
           {isFire ? 'Fogo na casa!' : 'Nenhum incêndio detectado'}
+         
+          
         </Text>
       </View>
       {isFire ? 
-      <View style={styles.button}>
+      <View style={styles.button_container}>
+        {soundObject !== '' ? <Button title='Mutar' onPress={muteSound}></Button>  : null}
         <Button title='Resetar' onPress={resetApp}></Button>
       </View>
      : null }
@@ -142,7 +167,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'white',
+
+  },
+  containerFogo: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FF4500',
   },
   title: {
     fontSize: 24,
@@ -159,13 +191,29 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: '#000000',
   },
-  button: {
+  button_container: {
     position: 'absolute',
     bottom: 20,
     alignSelf: 'center',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+  },
+  button:{
+    marginBottom: 10,
+  },
+  title_medidas: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  containerTemp:{
+    display: 'flex',
+    position: 'absolute',
+    top: 45,
   }
 });
 function schedulePushNotification() {

@@ -21,7 +21,8 @@
       "package": "com.iot.detector_de_incedio",
       "versionCode": 1,
       "permissions": [
-        "NOTIFICATIONS"
+        "NOTIFICATIONS",
+        "INTERNET"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
