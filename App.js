@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Button  } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Paho from 'paho-mqtt';
 import { Icon } from 'react-native-elements';
+import { Audio } from 'expo-av';
 
 const FIRE_TOPIC = 'casa/incendio';
 
@@ -18,8 +19,8 @@ const mqttConfig = {
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
   }),
 });
 
@@ -31,6 +32,32 @@ const App = () => {
   const notificationListener = useRef();
   const responseListener = useRef();  
   const [isFire, setIsFire] = useState(false);
+  const [soundObject, setSoundObject] = useState('');
+
+  const playSound = async () => {
+    try {
+      await Audio.setAudioModeAsync({staysActiveInBackground: true});
+      const soundObject = new Audio.Sound();
+      await soundObject.loadAsync(require('./assets/emergency_alert.mp3'));
+      await soundObject.setVolumeAsync(1.0);
+      await soundObject.playAsync();
+      setSoundObject(soundObject);
+      // Você pode adicionar outras ações após a reprodução do som, se necessário.
+    } catch (error) {
+      console.log('Ocorreu um erro ao reproduzir o som:', error);
+    }
+  };
+
+  const stopSound = async () => {
+    if (soundObject) {
+      await soundObject.stopAsync();
+    }
+  };
+
+  const resetApp = () => {
+    setIsFire(false);
+    stopSound();
+  };
 
   useEffect(() => {
     console.log("configurando notificações");
@@ -64,6 +91,8 @@ const App = () => {
       if (message.destinationName === FIRE_TOPIC) {
         setIsFire(true);
         schedulePushNotification();
+        alert("Sua casa está pegando fogo, ligue para os bombeiros");
+        playSound();
       }
     };
 
@@ -99,6 +128,11 @@ const App = () => {
           {isFire ? 'Fogo na casa!' : 'Nenhum incêndio detectado'}
         </Text>
       </View>
+      {isFire ? 
+      <View style={styles.button}>
+        <Button title='Resetar' onPress={resetApp}></Button>
+      </View>
+     : null }
     </View>
   );
 };
@@ -125,9 +159,16 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: '#000000',
   },
+  button: {
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  }
 });
 function schedulePushNotification() {
-  console.log("entrou na função schedulePushNotification");
   Notifications.scheduleNotificationAsync({
     content: {
       title: "Sua casa está pegando fogo",
@@ -142,12 +183,14 @@ async function registerForPushNotificationsAsync() {
   let token;
 
   if (Platform.OS === 'android') {
-    console.log("entrou na função registerForPushNotificationsAsync");
     await Notifications.setNotificationChannelAsync('default', {
       name: 'default',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#FF231F7C',
+      enableVibrate: true,
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: true,
     });
   }
 
