@@ -142,7 +142,7 @@ const App = () => {
   };
 
   return (
-    <View style={isFire? styles.containerFogo : styles.container}>
+    <View style={isFire ? styles.containerFogo : styles.container}>
       <View style={styles.containerTemp}>
         <Text style={styles.title_medidas}>Temperatura: {temperatura} °C {temperatura > 24 ? '🥵' : '🥶'}</Text>
         <Text style={styles.title_medidas}>Umidade: {umidade} 💧</Text>
@@ -230,7 +230,7 @@ function schedulePushNotification() {
   Notifications.scheduleNotificationAsync({
     content: {
       title: "Sua casa está pegando fogo",
-      body: 'Ligue para os bombeiros, sua casa está em cha',
+      body: 'Ligue para os bombeiros, sua casa está em chamas',
       data: {},
     },
     trigger: null,
