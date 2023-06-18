@@ -18,7 +18,11 @@
       "supportsTablet": true
     },
     "android": {
-      "permissions": ["NOTIFICATIONS"],
+      "package": "com.iot.detector_de_incedio",
+      "versionCode": 1,
+      "permissions": [
+        "NOTIFICATIONS"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -31,14 +35,19 @@
       [
         "expo-notifications",
         {
-          "icon": "./local/assets/notification-icon.png",
+          "icon": "./assets/icon.png",
           "color": "#ffffff",
           "sounds": [
-            "./local/assets/notification-sound.wav",
-            "./local/assets/notification-sound-other.wav"
+            "./assets/notification_sound.mp3",
+            "./assets/notification_sound_other.mp3"
           ]
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c8a0618d-30ba-4318-b0a5-d265901d083f"
+      }
+    }
   }
 }
