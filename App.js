@@ -8,13 +8,13 @@ import { Audio } from 'expo-av';
 
 background = '#fff';
 
-const FIRE_TOPIC = 'casa/incendio';
-const DHT_TOPIC = 'casa/sensores';
+const FIRE_TOPIC = '/casa/incendio';
+const DHT_TOPIC = '/casa/sensores';
 fire = false;
 
 const mqttConfig = {
-  broker: 'mqtt.eclipseprojects.io',
-  port: 80,
+  broker: 'ec2-18-228-241-251.sa-east-1.compute.amazonaws.com',
+  port: 9001,
   clientId: 'clientId1234',
   username: '',
   password: '',
@@ -27,6 +27,7 @@ Notifications.setNotificationHandler({
     shouldSetBadge: true,
   }),
 });
+
 
 const mqttClient = new Paho.Client(mqttConfig.broker, mqttConfig.port, mqttConfig.clientId);
 
@@ -82,8 +83,8 @@ const App = () => {
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log(response);
     });
-
     console.log("Iniciando conexão com o broker MQTT");
+
     mqttClient.connect({
       userName: mqttConfig.username,
       password: mqttConfig.password,
@@ -104,10 +105,19 @@ const App = () => {
       console.log('Mensagem recebida:', message.payloadString);
 
       if (message.destinationName === FIRE_TOPIC) {
+        if(fire) return;
+        this.fire = true;
         setIsFire(true);
         schedulePushNotification();
         alert("Sua casa está pegando fogo, ligue para os bombeiros");
         playSound();
+      }
+
+      if(message.destinationName === DHT_TOPIC) {
+        const data = JSON.parse(message.payloadString);
+        console.log(data);
+        setTemperatura(data.temperatura);
+        setUmidade(data.umidade);
       }
     };
 

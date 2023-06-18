@@ -28,12 +28,16 @@
     "react-native-mqtt": "^0.1.0-beta4",
     "react-native-notifications": "^4.3.5",
     "react-native-paho-mqtt": "^0.1.1",
-    "react-native-tcp": "^4.0.0",
+    "react-native-tcp": "^3.3.2",
     "stream-browserify": "^3.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "react-native-websocket": "^1.0.2"
+    "react-native-websocket": "^1.0.2",
+    "rn-nodeify": "^10.3.0"
   },
-  "private": true
+  "private": true,
+  "browser": {
+    "net": "react-native-tcp"
+  }
 }
