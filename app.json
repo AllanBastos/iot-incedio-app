@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "incedio-app",
-    "slug": "Fire House",
+    "name": "Fire House",
+    "slug": "incedio-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -47,7 +47,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "c8a0618d-30ba-4318-b0a5-d265901d083f"
+        "projectId": "c4188653-81e3-49e8-84b5-c4d1caa3c72d"
       }
     }
   }
