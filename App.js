@@ -115,15 +115,15 @@ const App = () => {
 
       if(message.destinationName === DHT_TOPIC) {
         const data = JSON.parse(message.payloadString);
-        console.log(data);
-        setTemperatura(data.temperatura);
-        setUmidade(data.umidade);
+        if(data.temperatura && data.umidade){ 
+          setTemperatura(data.temperatura);
+          setUmidade(data.umidade);
+        }
       }
     };
 
     mqttClient.onConnectionLost = (error) => {
       console.log('Conexão MQTT perdida:', error.errorMessage);
-      console.log(error);
     };
 
     // 
@@ -145,21 +145,19 @@ const App = () => {
     <View style={isFire ? styles.containerFogo : styles.container}>
       <View style={styles.containerTemp}>
         <Text style={styles.title_medidas}>Temperatura: {temperatura} °C {temperatura > 24 ? '🥵' : '🥶'}</Text>
-        <Text style={styles.title_medidas}>Umidade: {umidade} 💧</Text>
+        <Text style={styles.title_medidas}>Umidade: {umidade} % 💧</Text>
       </View>
 
-      <Text style={styles.title}>Status da Casa</Text>
+      <Text style={ !isFire ?  styles.title : styles.titleSecondary}>Status da Casa</Text>
       <View style={styles.statusContainer}>
         <Icon
           name={isFire ? 'fire' : 'check'}
           type="font-awesome"
-          color={isFire ? '#FF0000' : '#00FF00'}
+          color={isFire ? '#000' : '#00FF00'}
           size={100}
         />
-        <Text style={styles.statusText}>
-          {isFire ? 'Fogo na casa!' : 'Nenhum incêndio detectado'}
-         
-          
+        <Text style={ !isFire ?  styles.statusText : styles.statusTextSecondary}>
+          {isFire ? 'Incendio detectado!' : 'Tudo ok por aqui!'}
         </Text>
       </View>
       {isFire ? 
@@ -192,6 +190,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: '#000000',
   },
+  titleSecondary: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: 'white',
+  },
   statusContainer: {
     alignItems: 'center',
   },
@@ -200,6 +204,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 20,
     color: '#000000',
+  },
+  statusTextSecondary:{
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+    color: 'white',
   },
   button_container: {
     position: 'absolute',
